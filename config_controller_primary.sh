@@ -20,6 +20,9 @@ cat > /etc/hosts << "EOF"
 172.29.236.3 %%CLUSTER_PREFIX%%-node3
 172.29.236.4 %%CLUSTER_PREFIX%%-node4
 172.29.236.5 %%CLUSTER_PREFIX%%-node5
+172.29.236.6 %%CLUSTER_PREFIX%%-node6
+172.29.236.7 %%CLUSTER_PREFIX%%-node7
+172.29.236.8 %%CLUSTER_PREFIX%%-node8
 EOF
 
 cd /root
@@ -172,11 +175,11 @@ rpc_user_config="/etc/rpc_deploy/rpc_user_config.yml"
 swift_config="/etc/rpc_deploy/conf.d/swift.yml"
 user_variables="/etc/rpc_deploy/user_variables.yml"
 
-DEPLOY_INFRASTRUCTURE=%%DEPLOY_INFRASTRUCTURE%%
-DEPLOY_LOGGING=%%DEPLOY_LOGGING%%
+export DEPLOY_INFRASTRUCTURE=%%DEPLOY_INFRASTRUCTURE%%
+export DEPLOY_LOGGING=%%DEPLOY_LOGGING%%
 DEPLOY_OPENSTACK=%%DEPLOY_OPENSTACK%%
-DEPLOY_SWIFT=%%DEPLOY_SWIFT%%
-DEPLOY_TEMPEST=%%DEPLOY_TEMPEST%%
+export DEPLOY_SWIFT=%%DEPLOY_SWIFT%%
+export DEPLOY_TEMPEST=%%DEPLOY_TEMPEST%%
 DEPLOY_MONITORING=%%DEPLOY_MONITORING%%
 GERRIT_REFSPEC=%%GERRIT_REFSPEC%%
 
@@ -200,7 +203,7 @@ cp -a etc/rpc_deploy /etc/
 
 scripts/pw-token-gen.py --file $user_variables
 echo "nova_virt_type: qemu" >> $user_variables
-echo "lb_name: %%CLUSTER_PREFIX%%-node3" >> $user_variables
+echo "lb_name: %%CLUSTER_PREFIX%%-node8" >> $user_variables
 
 sed -i "s#\(rackspace_cloud_auth_url\): .*#\1: %%RACKSPACE_CLOUD_AUTH_URL%%#g" $user_variables
 sed -i "s/\(rackspace_cloud_tenant_id\): .*/\1: %%RACKSPACE_CLOUD_TENANT_ID%%/g" $user_variables

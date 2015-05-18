@@ -40,7 +40,7 @@ used_ips:
 # specified here will take precedence over anything else any where.
 global_overrides:
   # Internal Management vip address
-  internal_lb_vip_address: 172.29.236.3
+  internal_lb_vip_address: 172.29.236.8
   # External DMZ VIP address
   external_lb_vip_address: __EXTERNAL_VIP_IP__
   # Bridged interface to use with tunnel type networks
@@ -126,8 +126,8 @@ compute_hosts:
 
 # User defined Storage Hosts, this should be a required group
 storage_hosts:
-  __CLUSTER_PREFIX__-node4:
-    ip: 172.29.236.4
+  __CLUSTER_PREFIX__-node6:
+    ip: 172.29.236.6
     # "container_vars" can be set outside of all other options as
     # host specific optional variables.
     container_vars:
@@ -148,8 +148,8 @@ storage_hosts:
 
 # User defined Logging Hosts, this should be a required group
 log_hosts:
-  __CLUSTER_PREFIX__-node1:
-    ip: 172.29.236.1
+  __CLUSTER_PREFIX__-node7:
+    ip: 172.29.236.7
 
 # User defined Networking Hosts, this should be a required group
 network_hosts:
@@ -157,5 +157,5 @@ network_hosts:
     ip: 172.29.236.2
 
 haproxy_hosts:
-  __CLUSTER_PREFIX__-node3:
-    ip: 172.29.236.3
+  __CLUSTER_PREFIX__-node8:
+    ip: 172.29.236.8

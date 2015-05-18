@@ -30,7 +30,7 @@ cp -a etc/rpc_deploy /etc/
 
 scripts/pw-token-gen.py --file $user_variables
 echo "nova_virt_type: qemu" >> $user_variables
-echo "lb_name: %%CLUSTER_PREFIX%%-node3" >> $user_variables
+echo "lb_name: %%CLUSTER_PREFIX%%-node8" >> $user_variables
 
 sed -i "s#\(rackspace_cloud_auth_url\): .*#\1: %%RACKSPACE_CLOUD_AUTH_URL%%#g" $user_variables
 sed -i "s/\(rackspace_cloud_tenant_id\): .*/\1: %%RACKSPACE_CLOUD_TENANT_ID%%/g" $user_variables

@@ -207,6 +207,33 @@ resources:
   compute2_wait_handle:
     type: "OS::Heat::SwiftSignalHandle"
 
+  volume1_wait:
+    type: "OS::Heat::SwiftSignal"
+    properties:
+      handle: { get_resource: volume1_wait_handle }
+      count: 1
+      timeout: 900
+  volume1_wait_handle:
+    type: "OS::Heat::SwiftSignalHandle"
+
+  logging1_wait:
+    type: "OS::Heat::SwiftSignal"
+    properties:
+      handle: { get_resource: logging1_wait_handle }
+      count: 1
+      timeout: 900
+  logging1_wait_handle:
+    type: "OS::Heat::SwiftSignalHandle"
+
+  loadbalancer1_wait:
+    type: "OS::Heat::SwiftSignal"
+    properties:
+      handle: { get_resource: loadbalancer1_wait_handle }
+      count: 1
+      timeout: 900
+  loadbalancer1_wait_handle:
+    type: "OS::Heat::SwiftSignalHandle"
+
   ansible_keypair:
     type: "OS::Nova::KeyPair"
     properties:
@@ -259,7 +286,7 @@ resources:
           template: { get_file: config_controller_primary.sh }
           params:
             "%%ID%%": "1"
-            "%%EXTERNAL_VIP_IP%%": { get_attr: [controller3, accessIPv4] }
+            "%%EXTERNAL_VIP_IP%%": { get_attr: [loadbalancer1, accessIPv4] }
             "%%PRIVATE_KEY%%": { get_attr: [ansible_keypair, private_key] }
             "%%PUBLIC_KEY%%": { get_attr: [ansible_keypair, public_key] }
             "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
@@ -400,6 +427,90 @@ resources:
             "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
             "%%CURL_CLI%%": { get_attr: ['compute2_wait_handle', 'curl_cli'] }
 
+  volume1:
+    type: "OS::Nova::Server"
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      name:
+        str_replace:
+          template: "%%CLUSTER_PREFIX%%-node6"
+          params:
+            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
+      networks:
+        - uuid: 00000000-0000-0000-0000-000000000000
+        - uuid: 11111111-1111-1111-1111-111111111111
+        - uuid: { get_resource: heat_mgmt_vxlan }
+        - uuid: { get_resource: heat_tunnel }
+        - uuid: { get_resource: heat_storage }
+      config_drive: True
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: { get_file: config_compute_all.sh }
+          params:
+            "%%ID%%": "6"
+            "%%PUBLIC_KEY%%": { get_attr: [ansible_keypair, public_key] }
+            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
+            "%%CURL_CLI%%": { get_attr: ['volume1_wait_handle', 'curl_cli'] }
+
+  logging1:
+    type: "OS::Nova::Server"
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      name:
+        str_replace:
+          template: "%%CLUSTER_PREFIX%%-node7"
+          params:
+            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
+      networks:
+        - uuid: 00000000-0000-0000-0000-000000000000
+        - uuid: 11111111-1111-1111-1111-111111111111
+        - uuid: { get_resource: heat_mgmt_vxlan }
+        - uuid: { get_resource: heat_tunnel }
+        - uuid: { get_resource: heat_storage }
+      config_drive: True
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: { get_file: config_compute_all.sh }
+          params:
+            "%%ID%%": "7"
+            "%%PUBLIC_KEY%%": { get_attr: [ansible_keypair, public_key] }
+            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
+            "%%CURL_CLI%%": { get_attr: ['logging1_wait_handle', 'curl_cli'] }
+
+  loadbalancer1:
+    type: "OS::Nova::Server"
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      name:
+        str_replace:
+          template: "%%CLUSTER_PREFIX%%-node8"
+          params:
+            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
+      networks:
+        - uuid: 00000000-0000-0000-0000-000000000000
+        - uuid: 11111111-1111-1111-1111-111111111111
+        - uuid: { get_resource: heat_mgmt_vxlan }
+        - uuid: { get_resource: heat_tunnel }
+        - uuid: { get_resource: heat_storage }
+      config_drive: True
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: { get_file: config_compute_all.sh }
+          params:
+            "%%ID%%": "8"
+            "%%PUBLIC_KEY%%": { get_attr: [ansible_keypair, public_key] }
+            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
+            "%%CURL_CLI%%": { get_attr: ['loadbalancer1_wait_handle', 'curl_cli'] }
+
 outputs:
   controller1_ip:
     description: The IP address of controller1
@@ -416,3 +527,12 @@ outputs:
   compute2_ip:
     description: The IP address of compute2
     value: { get_attr: [compute2, accessIPv4] }
+  volume1_ip:
+    description: The IP address of volume1
+    value: { get_attr: [volume1, accessIPv4] }
+  logging1_ip:
+    description: The IP address of logging1
+    value: { get_attr: [logging1, accessIPv4] }
+  loadbalancer1_ip:
+    description: The IP address of loadbalancer1
+    value: { get_attr: [loadbalancer1, accessIPv4] }
