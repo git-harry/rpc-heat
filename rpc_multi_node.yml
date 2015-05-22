@@ -234,6 +234,33 @@ resources:
   loadbalancer1_wait_handle:
     type: "OS::Heat::SwiftSignalHandle"
 
+  swift1_wait_handle:
+    type: "OS::Heat::SwiftSignal"
+    properties:
+      handle: { get_resource: swift1_wait_handle }
+      count: 1
+      timeout: 900
+  swift1_wait_handle:
+    type: "OS::Heat::SwiftSignalHandle"
+
+  swift2_wait_handle:
+    type: "OS::Heat::SwiftSignal"
+    properties:
+      handle: { get_resource: swift2_wait_handle }
+      count: 1
+      timeout: 900
+  swift2_wait_handle:
+    type: "OS::Heat::SwiftSignalHandle"
+
+  swift3_wait_handle:
+    type: "OS::Heat::SwiftSignal"
+    properties:
+      handle: { get_resource: swift3_wait_handle }
+      count: 1
+      timeout: 900
+  swift3_wait_handle:
+    type: "OS::Heat::SwiftSignalHandle"
+
   ansible_keypair:
     type: "OS::Nova::KeyPair"
     properties:
@@ -511,6 +538,93 @@ resources:
             "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
             "%%CURL_CLI%%": { get_attr: ['loadbalancer1_wait_handle', 'curl_cli'] }
 
+  swift1:
+    type: "OS::Nova::Server"
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      name:
+        str_replace:
+          template: "%%CLUSTER_PREFIX%%-node9"
+          params:
+            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
+      networks:
+        - uuid: 00000000-0000-0000-0000-000000000000
+        - uuid: 11111111-1111-1111-1111-111111111111
+        - uuid: { get_resource: heat_mgmt_vxlan }
+        - uuid: { get_resource: heat_tunnel }
+        - uuid: { get_resource: heat_storage }
+      config_drive: True
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: { get_file: config_swift_all.sh }
+          params:
+            "%%ID%%": "9"
+            "%%PUBLIC_KEY%%": { get_attr: [ansible_keypair, public_key] }
+            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
+            "%%DEPLOY_SWIFT%%": { get_param: deploy_swift }
+            "%%CURL_CLI%%": { get_attr: ['swift1_wait_handle', 'curl_cli'] }
+
+  swift2:
+    type: "OS::Nova::Server"
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      name:
+        str_replace:
+          template: "%%CLUSTER_PREFIX%%-node10"
+          params:
+            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
+      networks:
+        - uuid: 00000000-0000-0000-0000-000000000000
+        - uuid: 11111111-1111-1111-1111-111111111111
+        - uuid: { get_resource: heat_mgmt_vxlan }
+        - uuid: { get_resource: heat_tunnel }
+        - uuid: { get_resource: heat_storage }
+      config_drive: True
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: { get_file: config_swift_all.sh }
+          params:
+            "%%ID%%": "10"
+            "%%PUBLIC_KEY%%": { get_attr: [ansible_keypair, public_key] }
+            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
+            "%%DEPLOY_SWIFT%%": { get_param: deploy_swift }
+            "%%CURL_CLI%%": { get_attr: ['swift2_wait_handle', 'curl_cli'] }
+
+  swift3:
+    type: "OS::Nova::Server"
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      name:
+        str_replace:
+          template: "%%CLUSTER_PREFIX%%-node11"
+          params:
+            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
+      networks:
+        - uuid: 00000000-0000-0000-0000-000000000000
+        - uuid: 11111111-1111-1111-1111-111111111111
+        - uuid: { get_resource: heat_mgmt_vxlan }
+        - uuid: { get_resource: heat_tunnel }
+        - uuid: { get_resource: heat_storage }
+      config_drive: True
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: { get_file: config_swift_all.sh }
+          params:
+            "%%ID%%": "11"
+            "%%PUBLIC_KEY%%": { get_attr: [ansible_keypair, public_key] }
+            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
+            "%%DEPLOY_SWIFT%%": { get_param: deploy_swift }
+            "%%CURL_CLI%%": { get_attr: ['swift3_wait_handle', 'curl_cli'] }
+
 outputs:
   controller1_ip:
     description: The IP address of controller1
@@ -536,3 +650,12 @@ outputs:
   loadbalancer1_ip:
     description: The IP address of loadbalancer1
     value: { get_attr: [loadbalancer1, accessIPv4] }
+  swift1_ip:
+    description: The IP address of swift1
+    value: { get_attr: [swift1, accessIPv4] }
+  swift2_ip:
+    description: The IP address of swift2
+    value: { get_attr: [swift2, accessIPv4] }
+  swift3_ip:
+    description: The IP address of swift3
+    value: { get_attr: [swift3, accessIPv4] }

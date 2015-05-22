@@ -149,18 +149,18 @@ swift-proxy_hosts:
 #           - name: sdf
 
 swift_hosts:
-  __CLUSTER_PREFIX__-node1:
-    ip: 172.29.236.1
+  __CLUSTER_PREFIX__-node9:
+    ip: 172.29.236.9
     # workaround for https://bugs.launchpad.net/openstack-ansible/+bug/1402594
     container_vars:
       swift_vars:
-  __CLUSTER_PREFIX__-node2:
-    ip: 172.29.236.2
+  __CLUSTER_PREFIX__-node10:
+    ip: 172.29.236.10
     # workaround for https://bugs.launchpad.net/openstack-ansible/+bug/1402594
     container_vars:
       swift_vars:
-  __CLUSTER_PREFIX__-node3:
-    ip: 172.29.236.3
+  __CLUSTER_PREFIX__-node11:
+    ip: 172.29.236.11
     # workaround for https://bugs.launchpad.net/openstack-ansible/+bug/1402594
     container_vars:
       swift_vars:

@@ -23,6 +23,9 @@ cat > /etc/hosts << "EOF"
 172.29.236.6 %%CLUSTER_PREFIX%%-node6
 172.29.236.7 %%CLUSTER_PREFIX%%-node7
 172.29.236.8 %%CLUSTER_PREFIX%%-node8
+172.29.236.9 %%CLUSTER_PREFIX%%-node9
+172.29.236.10 %%CLUSTER_PREFIX%%-node10
+172.29.236.11 %%CLUSTER_PREFIX%%-node11
 EOF
 
 cd /root
@@ -157,19 +160,6 @@ iface br-vxlan inet manual
 EOF
 
 ifup -a
-
-if [ "%%DEPLOY_SWIFT%%" = "yes" ]; then
-  pvcreate /dev/xvde1
-  vgcreate swift /dev/xvde1
-
-  for DISK in disk1 disk2 disk3; do
-    lvcreate -L 10G -n ${DISK} swift
-    echo "/dev/swift/${DISK} /srv/${DISK} xfs loop,noatime,nodiratime,nobarrier,logbufs=8 0 0" >> /etc/fstab
-    mkfs.xfs -f /dev/swift/${DISK}
-    mkdir -p /srv/${DISK}
-    mount /srv/${DISK}
-  done
-fi
 
 rpc_user_config="/etc/rpc_deploy/rpc_user_config.yml"
 swift_config="/etc/rpc_deploy/conf.d/swift.yml"
