@@ -26,6 +26,7 @@ cat > /etc/hosts << "EOF"
 172.29.236.9 %%CLUSTER_PREFIX%%-node9
 172.29.236.10 %%CLUSTER_PREFIX%%-node10
 172.29.236.11 %%CLUSTER_PREFIX%%-node11
+172.29.236.12 %%CLUSTER_PREFIX%%-node12
 EOF
 
 cd /root

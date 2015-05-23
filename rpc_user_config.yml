@@ -153,8 +153,8 @@ log_hosts:
 
 # User defined Networking Hosts, this should be a required group
 network_hosts:
-  __CLUSTER_PREFIX__-node2:
-    ip: 172.29.236.2
+  __CLUSTER_PREFIX__-node12:
+    ip: 172.29.236.12
 
 haproxy_hosts:
   __CLUSTER_PREFIX__-node8:

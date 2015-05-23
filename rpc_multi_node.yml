@@ -261,6 +261,15 @@ resources:
   swift3_wait_handle:
     type: "OS::Heat::SwiftSignalHandle"
 
+  networking1_wait_handle:
+    type: "OS::Heat::SwiftSignal"
+    properties:
+      handle: { get_resource: networking1_wait_handle }
+      count: 1
+      timeout: 900
+  networking1_wait_handle:
+    type: "OS::Heat::SwiftSignalHandle"
+
   ansible_keypair:
     type: "OS::Nova::KeyPair"
     properties:
@@ -625,6 +634,34 @@ resources:
             "%%DEPLOY_SWIFT%%": { get_param: deploy_swift }
             "%%CURL_CLI%%": { get_attr: ['swift3_wait_handle', 'curl_cli'] }
 
+  networking1:
+    type: "OS::Nova::Server"
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      name:
+        str_replace:
+          template: "%%CLUSTER_PREFIX%%-node12"
+          params:
+            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
+      networks:
+        - uuid: 00000000-0000-0000-0000-000000000000
+        - uuid: 11111111-1111-1111-1111-111111111111
+        - uuid: { get_resource: heat_mgmt_vxlan }
+        - uuid: { get_resource: heat_tunnel }
+        - uuid: { get_resource: heat_storage }
+      config_drive: True
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: { get_file: config_compute_all.sh }
+          params:
+            "%%ID%%": "12"
+            "%%PUBLIC_KEY%%": { get_attr: [ansible_keypair, public_key] }
+            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
+            "%%CURL_CLI%%": { get_attr: ['networking1_wait_handle', 'curl_cli'] }
+
 outputs:
   controller1_ip:
     description: The IP address of controller1
@@ -659,3 +696,6 @@ outputs:
   swift3_ip:
     description: The IP address of swift3
     value: { get_attr: [swift3, accessIPv4] }
+  networking1_ip:
+    description: The IP address of networking1
+    value: { get_attr: [networking1, accessIPv4] }
