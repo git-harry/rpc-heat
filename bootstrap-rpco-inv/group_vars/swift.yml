@@ -1,0 +1,39 @@
+---
+swift_conf_overrides:
+  global_overrides:
+    swift:
+      part_power: 8
+      storage_network: 'br-storage'
+      replication_network: 'br-storage'
+      drives:
+        - name: disk1
+        - name: disk2
+        - name: disk3
+      mount_point: /srv
+      storage_policies:
+        - policy:
+            name: default
+            index: 0
+            default: True
+
+  swift-proxy_hosts:
+    %%NODE1_NAME%%:
+      ip: %%NODE1_IP%%
+    %%NODE2_NAME%%:
+      ip: %%NODE2_IP%%
+    %%NODE3_NAME%%:
+      ip: %%NODE3_IP%%
+
+  swift_hosts:
+    %%NODE1_NAME%%:
+      ip: %%NODE1_IP%%
+    %%NODE2_NAME%%:
+      ip: %%NODE2_IP%%
+    %%NODE3_NAME%%:
+      ip: %%NODE3_IP%%
+
+user_variables_overrides_swift:
+    glance_swift_store_auth_address: '{{ keystone_service_internalurl }}'
+    glance_swift_store_user: 'service:glance'
+    glance_swift_store_key: '{{ glance_service_password }}'
+    glance_swift_store_region: RegionOne

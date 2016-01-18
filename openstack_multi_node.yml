@@ -246,16 +246,6 @@ resources:
   compute2_wait_handle:
     type: "OS::Heat::SwiftSignalHandle"
 
-  ansible_keypair:
-    type: "OS::Nova::KeyPair"
-    properties:
-      name:
-        str_replace:
-          template: "%%CLUSTER_PREFIX%%-key"
-          params:
-            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
-      save_private_key: true
-
   heat_mgmt_vxlan:
     type: OS::Neutron::Net
     properties:
@@ -304,18 +294,35 @@ resources:
   boot_config:
     type: Heat::InstallConfigAgent
 
-  controller1_config:
+  controller1_osa_bootstrap_config:
     type: OS::Heat::SoftwareConfig
     properties:
       group: script
       config:
         str_replace:
-          template: { get_file: config_controller_primary.sh }
+          template: { get_file: bootstrap.sh }
           params:
-            "%%ID%%": "1"
+            "%%NODE1_NAME%%":
+              get_attr: [controller1, name]
+            "%%NODE1_IP%%":
+              get_attr: [controller1, networks, { str_replace: {template: stack_mgmt_vxlan, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE2_NAME%%":
+              get_attr: [controller2, name]
+            "%%NODE2_IP%%":
+              get_attr: [controller2, networks, { str_replace: {template: stack_mgmt_vxlan, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE3_NAME%%":
+              get_attr: [controller3, name]
+            "%%NODE3_IP%%":
+              get_attr: [controller3, networks, { str_replace: {template: stack_mgmt_vxlan, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE4_NAME%%":
+              get_attr: [compute1, name]
+            "%%NODE4_IP%%":
+              get_attr: [compute1, networks, { str_replace: {template: stack_mgmt_vxlan, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE5_NAME%%":
+              get_attr: [compute2, name]
+            "%%NODE5_IP%%":
+              get_attr: [compute2, networks, { str_replace: {template: stack_mgmt_vxlan, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
             "%%EXTERNAL_VIP_IP%%": { get_attr: [controller3, accessIPv4] }
-            "%%PRIVATE_KEY%%": { get_attr: [ansible_keypair, private_key] }
-            "%%PUBLIC_KEY%%": { get_attr: [ansible_keypair, public_key] }
             "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
             "%%DEPLOY_LOGGING%%": { get_param: deploy_logging }
             "%%DEPLOY_OPENSTACK%%": { get_param: deploy_openstack }
@@ -341,6 +348,36 @@ resources:
             "%%GLANCE_DEFAULT_STORE%%": { get_param: glance_default_store }
             "%%GLANCE_SWIFT_STORE_REGION%%": { get_param: glance_swift_store_region }
             "%%RUN_ANSIBLE%%": { get_param: run_ansible }
+            "%%GERRIT_REFSPEC%%": { get_param: gerrit_refspec }
+      outputs:
+        - name: result
+
+  deploy_controller1_osa_bootstrap:
+    type: OS::Heat::SoftwareDeployment
+    depends_on: [controller1_volume_attachment, controller2_volume_attachment, controller3_volume_attachment, compute1_volume_attachment, compute2_volume_attachment, ceph_nodes]
+    properties:
+      signal_transport: TEMP_URL_SIGNAL
+      config: { get_resource: controller1_osa_bootstrap_config }
+      server: { get_resource: controller1 }
+
+  controller1_config:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config:
+        str_replace:
+          template: { get_file: deploy.sh }
+          params:
+            "%%DEPLOY_LOGGING%%": { get_param: deploy_logging }
+            "%%DEPLOY_OPENSTACK%%": { get_param: deploy_openstack }
+            "%%DEPLOY_TEMPEST%%": { get_param: deploy_tempest }
+            "%%RUN_TEMPEST%%": { get_param: run_tempest }
+            "%%TEMPEST_SCRIPT_PARAMETERS%%": { get_param: tempest_script_parameters }
+            "%%DEPLOY_SWIFT%%": { get_param: deploy_swift }
+            "%%DEPLOY_CEPH%%": { get_param: deploy_ceph }
+            "%%CEPH_NODE_COUNT%%": { get_param: ceph_node_count }
+            "%%DEPLOY_MONITORING%%": { get_param: deploy_monitoring }
+            "%%TEST_MONITORING%%": { get_param: test_monitoring }
             "%%CURL_CLI%%": { get_attr: ['controller1_wait_handle', 'curl_cli'] }
             "%%GERRIT_REFSPEC%%": { get_param: gerrit_refspec }
       outputs:
@@ -348,7 +385,7 @@ resources:
 
   deploy_controller1:
     type: OS::Heat::SoftwareDeployment
-    depends_on: [controller1_volume_attachment, deploy_controller2, deploy_controller3, deploy_compute1, deploy_compute2, ceph_nodes]
+    depends_on: [deploy_controller1_osa_bootstrap]
     properties:
       signal_transport: TEMP_URL_SIGNAL
       config: { get_resource: controller1_config }
@@ -389,32 +426,6 @@ resources:
       instance_uuid: { get_resource: controller1 }
       mountpoint: "/dev/xvdf"
 
-  controller2_config:
-    type: OS::Heat::SoftwareConfig
-    properties:
-      group: script
-      config:
-        str_replace:
-          template: { get_file: config_controller_other.sh }
-          params:
-            "%%ID%%": "2"
-            "%%PUBLIC_KEY%%": { get_attr: [ansible_keypair, public_key] }
-            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
-            "%%DEPLOY_SWIFT%%": { get_param: deploy_swift }
-            "%%DEPLOY_CEPH%%": { get_param: deploy_ceph }
-            "%%CEPH_NODE_COUNT%%": { get_param: ceph_node_count }
-            "%%CURL_CLI%%": { get_attr: ['controller2_wait_handle', 'curl_cli'] }
-      outputs:
-        - name: result
-
-  deploy_controller2:
-    type: OS::Heat::SoftwareDeployment
-    depends_on: [controller2_volume_attachment]
-    properties:
-      signal_transport: TEMP_URL_SIGNAL
-      config: { get_resource: controller2_config }
-      server: { get_resource: controller2 }
-
   controller2:
     type: "OS::Nova::Server"
     properties:
@@ -433,9 +444,6 @@ resources:
         - uuid: { get_resource: heat_tunnel }
         - uuid: { get_resource: heat_storage }
       config_drive: True
-      user_data_format: SOFTWARE_CONFIG
-      software_config_transport: POLL_TEMP_URL
-      user_data: { get_attr: [boot_config, config] }
 
   controller2_volume:
     type: OS::Cinder::Volume
@@ -449,32 +457,6 @@ resources:
       volume_id: { get_resource: controller2_volume }
       instance_uuid: { get_resource: controller2 }
       mountpoint: "/dev/xvdf"
-
-  controller3_config:
-    type: OS::Heat::SoftwareConfig
-    properties:
-      group: script
-      config:
-        str_replace:
-          template: { get_file: config_controller_other.sh }
-          params:
-            "%%ID%%": "3"
-            "%%PUBLIC_KEY%%": { get_attr: [ansible_keypair, public_key] }
-            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
-            "%%DEPLOY_SWIFT%%": { get_param: deploy_swift }
-            "%%DEPLOY_CEPH%%": { get_param: deploy_ceph }
-            "%%CEPH_NODE_COUNT%%": { get_param: ceph_node_count }
-            "%%CURL_CLI%%": { get_attr: ['controller3_wait_handle', 'curl_cli'] }
-      outputs:
-        - name: result
-
-  deploy_controller3:
-    type: OS::Heat::SoftwareDeployment
-    depends_on: [controller3_volume_attachment]
-    properties:
-      signal_transport: TEMP_URL_SIGNAL
-      config: { get_resource: controller3_config }
-      server: { get_resource: controller3 }
 
   controller3:
     type: "OS::Nova::Server"
@@ -494,9 +476,6 @@ resources:
         - uuid: { get_resource: heat_tunnel }
         - uuid: { get_resource: heat_storage }
       config_drive: True
-      user_data_format: SOFTWARE_CONFIG
-      software_config_transport: POLL_TEMP_URL
-      user_data: { get_attr: [boot_config, config] }
 
   controller3_volume:
     type: OS::Cinder::Volume
@@ -510,31 +489,6 @@ resources:
       volume_id: { get_resource: controller3_volume }
       instance_uuid: { get_resource: controller3 }
       mountpoint: "/dev/xvdf"
-
-  compute1_config:
-    type: OS::Heat::SoftwareConfig
-    properties:
-      group: script
-      config:
-        str_replace:
-          template: { get_file: config_compute_all.sh }
-          params:
-            "%%ID%%": "4"
-            "%%PUBLIC_KEY%%": { get_attr: [ansible_keypair, public_key] }
-            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
-            "%%DEPLOY_CEPH%%": { get_param: deploy_ceph }
-            "%%CEPH_NODE_COUNT%%": { get_param: ceph_node_count }
-            "%%CURL_CLI%%": { get_attr: ['compute1_wait_handle', 'curl_cli'] }
-      outputs:
-        - name: result
-
-  deploy_compute1:
-    type: OS::Heat::SoftwareDeployment
-    depends_on: [compute1_volume_attachment]
-    properties:
-      signal_transport: TEMP_URL_SIGNAL
-      config: { get_resource: compute1_config }
-      server: { get_resource: compute1 }
 
   compute1:
     type: "OS::Nova::Server"
@@ -554,9 +508,6 @@ resources:
         - uuid: { get_resource: heat_tunnel }
         - uuid: { get_resource: heat_storage }
       config_drive: True
-      user_data_format: SOFTWARE_CONFIG
-      software_config_transport: POLL_TEMP_URL
-      user_data: { get_attr: [boot_config, config] }
 
   compute1_volume:
     type: OS::Cinder::Volume
@@ -570,31 +521,6 @@ resources:
       volume_id: { get_resource: compute1_volume }
       instance_uuid: { get_resource: compute1 }
       mountpoint: "/dev/xvdf"
-
-  compute2_config:
-    type: OS::Heat::SoftwareConfig
-    properties:
-      group: script
-      config:
-        str_replace:
-          template: { get_file: config_compute_all.sh }
-          params:
-            "%%ID%%": "5"
-            "%%PUBLIC_KEY%%": { get_attr: [ansible_keypair, public_key] }
-            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
-            "%%DEPLOY_CEPH%%": { get_param: deploy_ceph }
-            "%%CEPH_NODE_COUNT%%": { get_param: ceph_node_count }
-            "%%CURL_CLI%%": { get_attr: ['compute2_wait_handle', 'curl_cli'] }
-      outputs:
-        - name: result
-
-  deploy_compute2:
-    type: OS::Heat::SoftwareDeployment
-    depends_on: [compute2_volume_attachment]
-    properties:
-      signal_transport: TEMP_URL_SIGNAL
-      config: { get_resource: compute2_config }
-      server: { get_resource: compute2 }
 
   compute2:
     type: "OS::Nova::Server"
@@ -614,9 +540,6 @@ resources:
         - uuid: { get_resource: heat_tunnel }
         - uuid: { get_resource: heat_storage }
       config_drive: True
-      user_data_format: SOFTWARE_CONFIG
-      software_config_transport: POLL_TEMP_URL
-      user_data: { get_attr: [boot_config, config] }
 
   compute2_volume:
     type: OS::Cinder::Volume
@@ -644,7 +567,6 @@ resources:
           cluster_prefix: { get_param: cluster_prefix }
           deploy_ceph: { get_param: deploy_ceph }
           ceph_node_count: { get_param: ceph_node_count }
-          public_key: { get_attr: [ansible_keypair, public_key] }
           group_index: '%index%'
           heat_mgmt_vxlan: { get_resource: heat_mgmt_vxlan }
           heat_tunnel: { get_resource: heat_tunnel }
