@@ -9,6 +9,8 @@ cat > /tmp/bootstrap-rpco-inv/group_vars/all.yml << EOF
 bootstrap_host_data_disk_min_size: 30
 bootstrap_host_aio_config: false
 
+id: '{{ mgmt_ip.split(".")[-1] }}'
+
  network_interfaces:
   eth1:
     - address_family: 'inet'
@@ -21,7 +23,7 @@ bootstrap_host_aio_config: false
     - address_family: 'inet'
       method: 'static'
       options:
-        address: '172.29.232.%%ID%%'
+        address: '{{172.29.232.ID | replace("ID", id)}}'
         netmask: '255.255.252.0'
   vxlan2:
     - address_family: 'inet'
@@ -71,7 +73,7 @@ bootstrap_host_aio_config: false
     - address_family: 'inet'
       method: 'static'
       options:
-        address: '172.29.244.%%ID%%'
+        address: '{{ 172.29.244.ID | replace("ID", id) }}'
         netmask: '255.255.252.0'
         bridge_ports: 'vxlan4'
   br-vlan:
