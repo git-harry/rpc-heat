@@ -304,24 +304,74 @@ resources:
           params:
             "%%NODE1_NAME%%":
               get_attr: [controller1, name]
-            "%%NODE1_IP%%":
+            "%%NODE1_MGMT_IP%%":
               get_attr: [controller1, networks, { str_replace: {template: stack_mgmt_vxlan, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE1_TUNNEL_IP%%":
+              get_attr: [controller1, networks, { str_replace: {template: stack_tunnel, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE1_STORAGE_IP%%":
+              get_attr: [controller1, networks, { str_replace: {template: stack_storage, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE1_ID%%":
+              str_split:
+                - '.'
+                - get_attr: [controller1, networks, { str_replace: {template: stack_mgmt_vxlan, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+                - 3
+
             "%%NODE2_NAME%%":
               get_attr: [controller2, name]
-            "%%NODE2_IP%%":
+            "%%NODE2_MGMT_IP%%":
               get_attr: [controller2, networks, { str_replace: {template: stack_mgmt_vxlan, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE2_TUNNEL_IP%%":
+              get_attr: [controller2, networks, { str_replace: {template: stack_tunnel, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE2_STORAGE_IP%%":
+              get_attr: [controller2, networks, { str_replace: {template: stack_storage, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE2_ID%%":
+              str_split:
+                - '.'
+                - get_attr: [controller2, networks, { str_replace: {template: stack_mgmt_vxlan, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+                - 3
+
             "%%NODE3_NAME%%":
               get_attr: [controller3, name]
-            "%%NODE3_IP%%":
+            "%%NODE3_MGMT_IP%%":
               get_attr: [controller3, networks, { str_replace: {template: stack_mgmt_vxlan, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE3_TUNNEL_IP%%":
+              get_attr: [controller3, networks, { str_replace: {template: stack_tunnel, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE3_STORAGE_IP%%":
+              get_attr: [controller3, networks, { str_replace: {template: stack_storage, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE3_ID%%":
+              str_split:
+                - '.'
+                - get_attr: [controller3, networks, { str_replace: {template: stack_mgmt_vxlan, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+                - 3
+
             "%%NODE4_NAME%%":
               get_attr: [compute1, name]
-            "%%NODE4_IP%%":
+            "%%NODE4_MGMT_IP%%":
               get_attr: [compute1, networks, { str_replace: {template: stack_mgmt_vxlan, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE4_TUNNEL_IP%%":
+              get_attr: [compute1, networks, { str_replace: {template: stack_tunnel, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE4_STORAGE_IP%%":
+              get_attr: [compute1, networks, { str_replace: {template: stack_storage, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE4_ID%%":
+              str_split:
+                - '.'
+                - get_attr: [compute1, networks, { str_replace: {template: stack_mgmt_vxlan, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+                - 3
+
             "%%NODE5_NAME%%":
               get_attr: [compute2, name]
-            "%%NODE5_IP%%":
+            "%%NODE5_MGMT_IP%%":
               get_attr: [compute2, networks, { str_replace: {template: stack_mgmt_vxlan, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE5_TUNNEL_IP%%":
+              get_attr: [compute2, networks, { str_replace: {template: stack_tunnel, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE5_STORAGE_IP%%":
+              get_attr: [compute2, networks, { str_replace: {template: stack_storage, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+            "%%NODE5_ID%%":
+              str_split:
+                - '.'
+                - get_attr: [compute2, networks, { str_replace: {template: stack_mgmt_vxlan, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
+                - 3
+
             "%%EXTERNAL_VIP_IP%%": { get_attr: [controller3, accessIPv4] }
             "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
             "%%DEPLOY_LOGGING%%": { get_param: deploy_logging }

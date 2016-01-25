@@ -1,5 +1,5 @@
-%%NODE1_NAME%% ansible_ssh_host=%%NODE1_IP%%
-%%NODE2_NAME%% ansible_ssh_host=%%NODE2_IP%%
-%%NODE3_NAME%% ansible_ssh_host=%%NODE3_IP%%
-%%NODE4_NAME%% ansible_ssh_host=%%NODE4_IP%%
-%%NODE5_NAME%% ansible_ssh_host=%%NODE5_IP%%
+%%NODE1_NAME%% ansible_ssh_host=%%NODE1_MGMT_IP%%
+%%NODE2_NAME%% ansible_ssh_host=%%NODE2_MGMT_IP%%
+%%NODE3_NAME%% ansible_ssh_host=%%NODE3_MGMT_IP%%
+%%NODE4_NAME%% ansible_ssh_host=%%NODE4_MGMT_IP%%
+%%NODE5_NAME%% ansible_ssh_host=%%NODE5_MGMT_IP%%

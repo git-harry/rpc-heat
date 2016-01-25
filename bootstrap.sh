@@ -8,6 +8,95 @@ cat > /tmp/bootstrap-rpco-inv/group_vars/all.yml << EOF
 ---
 bootstrap_host_data_disk_min_size: 30
 bootstrap_host_aio_config: false
+
+ network_interfaces:
+  eth1:
+    - address_family: 'inet'
+      method: 'manual'
+  br-snet:
+    - address_family: '{{ network_interface_files.eth1.address_family }}'
+      method: '{{ network_interface_files.eth1.method }}'
+      options: '{{ network_interface_files.eth1.options | combine({"bridge_ports": eth1) }}'
+  eth2:
+    - address_family: 'inet'
+      method: 'static'
+      options:
+        address: '172.29.232.%%ID%%'
+        netmask: '255.255.252.0'
+  vxlan2:
+    - address_family: 'inet'
+      method: 'manual'
+      options:
+        pre-up:
+          - 'ip link add vxlan2 type vxlan id 2 group 239.0.0.16 ttl 4 dev eth2'
+        up:
+          - 'ip link set vxlan2 up'
+        down:
+          - 'ip link set vxlan2 down'
+  br-mgmt:
+    - address_family: 'inet'
+      method: 'static'
+      options:
+        address: '{{ mgmt_ip }}'
+        netmask: '255.255.252.0'
+        bridge_ports: 'vxlan2'
+  eth4:
+    - address_family: 'inet'
+      method: 'static'
+      options:
+        address: '{{ storage_ip }}'
+        netmask: '255.255.252.0'
+  vxlan4:
+    - address_family: 'inet'
+      method: 'manual'
+      options:
+        pre-up:
+          - 'ip link add vxlan4 type vxlan id 4 group 239.0.0.16 ttl 4 dev eth4'
+        up:
+          - 'ip link set vxlan4 up'
+        down:
+          - 'ip link set vxlan4 down'
+  vxlan5:
+    # We don't have a dedicated network for this traffic, so we piggy-back on eth4
+    - address_family: 'inet'
+      method: 'manual'
+      options:
+        pre-up:
+          - 'ip link add vxlan5 type vxlan id 5 group 239.0.0.16 ttl 4 dev eth4'
+        up:
+          - 'ip link set vxlan5 up'
+        down:
+          - 'ip link set vxlan5 down'
+  br-storage:
+    - address_family: 'inet'
+      method: 'static'
+      options:
+        address: '172.29.244.%%ID%%'
+        netmask: '255.255.252.0'
+        bridge_ports: 'vxlan4'
+  br-vlan:
+    - address_family: 'inet'
+      method: 'manual'
+      options:
+        bridge_ports: 'vxlan5'
+  eth3:
+    - address_family: 'inet'
+      method: 'manual'
+  vxlan3:
+    - address_family: 'inet'
+      method: 'manual'
+      options:
+        pre-up:
+          - 'ip link add vxlan3 type vxlan id 3 group 239.0.0.16 ttl 4 dev eth3'
+        up:
+          - 'ip link set vxlan3 up'
+        down:
+          - 'ip link set vxlan3 down'
+  br-vxlan:
+    - address_family: 'inet'
+      method: 'manual'
+      options:
+        bridge_ports: 'vxlan3'
 EOF
 cat > /tmp/bootstrap-rpco-inv/group_vars/swift.yml << EOF
 ---
@@ -30,19 +119,19 @@ swift_conf_overrides:
 
   swift-proxy_hosts:
     %%NODE1_NAME%%:
-      ip: %%NODE1_IP%%
+      ip: %%NODE1_MGMT_IP%%
     %%NODE2_NAME%%:
-      ip: %%NODE2_IP%%
+      ip: %%NODE2_MGMT_IP%%
     %%NODE3_NAME%%:
-      ip: %%NODE3_IP%%
+      ip: %%NODE3_MGMT_IP%%
 
   swift_hosts:
     %%NODE1_NAME%%:
-      ip: %%NODE1_IP%%
+      ip: %%NODE1_MGMT_IP%%
     %%NODE2_NAME%%:
-      ip: %%NODE2_IP%%
+      ip: %%NODE2_MGMT_IP%%
     %%NODE3_NAME%%:
-      ip: %%NODE3_IP%%
+      ip: %%NODE3_MGMT_IP%%
 
 user_variables_overrides_swift:
     glance_swift_store_auth_address: '{{ keystone_service_internalurl }}'
@@ -53,6 +142,10 @@ EOF
 cat > /tmp/bootstrap-rpco-inv/host_vars/%%NODE1_NAME%%.yml << EOF
 ---
 bootstrap_host_aio_config: true
+
+mgmt_ip: '%%NODE1_MGMT_IP%%'
+storage_ip: '%%NODE1_STORAGE_IP%%'
+tunnel_ip: '%%NODE1_TUNNEL_IP%%'
 
 openstack_user_config_overrides:
   cidr_networks:
@@ -66,7 +159,7 @@ openstack_user_config_overrides:
     - 172.29.244.1,172.29.244.50
 
   global_overrides:
-    internal_lb_vip_address: %%NODE3_IP%%
+    internal_lb_vip_address: %%NODE3_MGMT_IP%%
     external_lb_vip_address: %%EXTERNAL_VIP_IP%%
     tunnel_bridge: "br-vxlan"
     management_bridge: "br-mgmt"
@@ -127,69 +220,69 @@ openstack_user_config_overrides:
 
   shared-infra_hosts:
     %%NODE1_NAME%%:
-      ip: %%NODE1_IP%%
+      ip: %%NODE1_MGMT_IP%%
     %%NODE2_NAME%%:
-      ip: %%NODE2_IP%%
+      ip: %%NODE2_MGMT_IP%%
       affinity:
         utility_container: 0
     %%NODE3_NAME%%:
-      ip: %%NODE3_IP%%
+      ip: %%NODE3_MGMT_IP%%
       affinity:
         utility_container: 0
 
   os-infra_hosts:
     %%NODE1_NAME%%:
-      ip: %%NODE1_IP%%
+      ip: %%NODE1_MGMT_IP%%
     %%NODE2_NAME%%:
-      ip: %%NODE2_IP%%
+      ip: %%NODE2_MGMT_IP%%
     %%NODE3_NAME%%:
-      ip: %%NODE3_IP%%
+      ip: %%NODE3_MGMT_IP%%
 
   storage-infra_hosts:
     %%NODE1_NAME%%:
-      ip: %%NODE1_IP%%
+      ip: %%NODE1_MGMT_IP%%
     %%NODE2_NAME%%:
-      ip: %%NODE2_IP%%
+      ip: %%NODE2_MGMT_IP%%
     %%NODE3_NAME%%:
-      ip: %%NODE3_IP%%
+      ip: %%NODE3_MGMT_IP%%
 
   repo-infra_hosts:
     %%NODE1_NAME%%:
-      ip: %%NODE1_IP%%
+      ip: %%NODE1_MGMT_IP%%
     %%NODE2_NAME%%:
-      ip: %%NODE2_IP%%
+      ip: %%NODE2_MGMT_IP%%
     %%NODE3_NAME%%:
-      ip: %%NODE3_IP%%
+      ip: %%NODE3_MGMT_IP%%
 
   identity_hosts:
     %%NODE1_NAME%%:
-      ip: %%NODE1_IP%%
+      ip: %%NODE1_MGMT_IP%%
     %%NODE2_NAME%%:
-      ip: %%NODE2_IP%%
+      ip: %%NODE2_MGMT_IP%%
     %%NODE3_NAME%%:
-      ip: %%NODE3_IP%%
+      ip: %%NODE3_MGMT_IP%%
 
   compute_hosts:
     %%NODE4_NAME%%:
-      ip: %%NODE4_IP%%
+      ip: %%NODE4_MGMT_IP%%
     %%NODE5_NAME%%:
-      ip: %%NODE5_IP%%
+      ip: %%NODE5_MGMT_IP%%
 
   log_hosts:
     %%NODE1_NAME%%:
-      ip: %%NODE1_IP%%
+      ip: %%NODE1_MGMT_IP%%
 
   network_hosts:
     %%NODE1_NAME%%:
-      ip: %%NODE1_IP%%
+      ip: %%NODE1_MGMT_IP%%
     %%NODE2_NAME%%:
-      ip: %%NODE2_IP%%
+      ip: %%NODE2_MGMT_IP%%
     %%NODE3_NAME%%:
-      ip: %%NODE3_IP%%
+      ip: %%NODE3_MGMT_IP%%
 
   haproxy_hosts:
     %%NODE3_NAME%%:
-      ip: %%NODE3_IP%%
+      ip: %%NODE3_MGMT_IP%%
 
 user_variables_overrides_defaults:
   nova_virt_type: qemu
@@ -203,25 +296,41 @@ EOF
 cat > /tmp/bootstrap-rpco-inv/host_vars/%%NODE2_NAME%%.yml << EOF
 ---
 bootstrap_host_aio_config: false
+
+mgmt_ip: '%%NODE2_MGMT_IP%%'
+storage_ip: '%%NODE2_STORAGE_IP%%'
+tunnel_ip: '%%NODE2_TUNNEL_IP%%'
 EOF
 cat > /tmp/bootstrap-rpco-inv/host_vars/%%NODE3_NAME%%.yml << EOF
 ---
 bootstrap_host_aio_config: false
+
+mgmt_ip: '%%NODE3_MGMT_IP%%'
+storage_ip: '%%NODE3_STORAGE_IP%%'
+tunnel_ip: '%%NODE3_TUNNEL_IP%%'
 EOF
 cat > /tmp/bootstrap-rpco-inv/host_vars/%%NODE4_NAME%%.yml << EOF
 ---
 bootstrap_host_aio_config: false
+
+mgmt_ip: '%%NODE4_MGMT_IP%%'
+storage_ip: '%%NODE4_STORAGE_IP%%'
+tunnel_ip: '%%NODE4_TUNNEL_IP%%'
 EOF
 cat > /tmp/bootstrap-rpco-inv/host_vars/%%NODE5_NAME%%.yml << EOF
 ---
 bootstrap_host_aio_config: false
+
+mgmt_ip: '%%NODE5_MGMT_IP%%'
+storage_ip: '%%NODE5_STORAGE_IP%%'
+tunnel_ip: '%%NODE5_TUNNEL_IP%%'
 EOF
 cat > /tmp/bootstrap-rpco-inv/hosts << EOF
-%%NODE1_NAME%% ansible_ssh_host=%%NODE1_IP%%
-%%NODE2_NAME%% ansible_ssh_host=%%NODE2_IP%%
-%%NODE3_NAME%% ansible_ssh_host=%%NODE3_IP%%
-%%NODE4_NAME%% ansible_ssh_host=%%NODE4_IP%%
-%%NODE5_NAME%% ansible_ssh_host=%%NODE5_IP%%
+%%NODE1_NAME%% ansible_ssh_host=%%NODE1_MGMT_IP%%
+%%NODE2_NAME%% ansible_ssh_host=%%NODE2_MGMT_IP%%
+%%NODE3_NAME%% ansible_ssh_host=%%NODE3_MGMT_IP%%
+%%NODE4_NAME%% ansible_ssh_host=%%NODE4_MGMT_IP%%
+%%NODE5_NAME%% ansible_ssh_host=%%NODE5_MGMT_IP%%
 EOF
 if [ %%DEPLOY_SWIFT%% == yes ]; then
   echo '[swift]

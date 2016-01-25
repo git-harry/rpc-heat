@@ -1,2 +1,6 @@
 ---
 bootstrap_host_aio_config: false
+
+mgmt_ip: '%%NODE5_MGMT_IP%%'
+storage_ip: '%%NODE5_STORAGE_IP%%'
+tunnel_ip: '%%NODE5_TUNNEL_IP%%'

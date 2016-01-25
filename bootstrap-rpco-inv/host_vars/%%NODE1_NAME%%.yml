@@ -1,6 +1,10 @@
 ---
 bootstrap_host_aio_config: true
 
+mgmt_ip: '%%NODE1_MGMT_IP%%'
+storage_ip: '%%NODE1_STORAGE_IP%%'
+tunnel_ip: '%%NODE1_TUNNEL_IP%%'
+
 openstack_user_config_overrides:
   cidr_networks:
     container: 172.29.236.0/22
@@ -13,7 +17,7 @@ openstack_user_config_overrides:
     - 172.29.244.1,172.29.244.50
 
   global_overrides:
-    internal_lb_vip_address: %%NODE3_IP%%
+    internal_lb_vip_address: %%NODE3_MGMT_IP%%
     external_lb_vip_address: %%EXTERNAL_VIP_IP%%
     tunnel_bridge: "br-vxlan"
     management_bridge: "br-mgmt"
@@ -74,69 +78,69 @@ openstack_user_config_overrides:
 
   shared-infra_hosts:
     %%NODE1_NAME%%:
-      ip: %%NODE1_IP%%
+      ip: %%NODE1_MGMT_IP%%
     %%NODE2_NAME%%:
-      ip: %%NODE2_IP%%
+      ip: %%NODE2_MGMT_IP%%
       affinity:
         utility_container: 0
     %%NODE3_NAME%%:
-      ip: %%NODE3_IP%%
+      ip: %%NODE3_MGMT_IP%%
       affinity:
         utility_container: 0
 
   os-infra_hosts:
     %%NODE1_NAME%%:
-      ip: %%NODE1_IP%%
+      ip: %%NODE1_MGMT_IP%%
     %%NODE2_NAME%%:
-      ip: %%NODE2_IP%%
+      ip: %%NODE2_MGMT_IP%%
     %%NODE3_NAME%%:
-      ip: %%NODE3_IP%%
+      ip: %%NODE3_MGMT_IP%%
 
   storage-infra_hosts:
     %%NODE1_NAME%%:
-      ip: %%NODE1_IP%%
+      ip: %%NODE1_MGMT_IP%%
     %%NODE2_NAME%%:
-      ip: %%NODE2_IP%%
+      ip: %%NODE2_MGMT_IP%%
     %%NODE3_NAME%%:
-      ip: %%NODE3_IP%%
+      ip: %%NODE3_MGMT_IP%%
 
   repo-infra_hosts:
     %%NODE1_NAME%%:
-      ip: %%NODE1_IP%%
+      ip: %%NODE1_MGMT_IP%%
     %%NODE2_NAME%%:
-      ip: %%NODE2_IP%%
+      ip: %%NODE2_MGMT_IP%%
     %%NODE3_NAME%%:
-      ip: %%NODE3_IP%%
+      ip: %%NODE3_MGMT_IP%%
 
   identity_hosts:
     %%NODE1_NAME%%:
-      ip: %%NODE1_IP%%
+      ip: %%NODE1_MGMT_IP%%
     %%NODE2_NAME%%:
-      ip: %%NODE2_IP%%
+      ip: %%NODE2_MGMT_IP%%
     %%NODE3_NAME%%:
-      ip: %%NODE3_IP%%
+      ip: %%NODE3_MGMT_IP%%
 
   compute_hosts:
     %%NODE4_NAME%%:
-      ip: %%NODE4_IP%%
+      ip: %%NODE4_MGMT_IP%%
     %%NODE5_NAME%%:
-      ip: %%NODE5_IP%%
+      ip: %%NODE5_MGMT_IP%%
 
   log_hosts:
     %%NODE1_NAME%%:
-      ip: %%NODE1_IP%%
+      ip: %%NODE1_MGMT_IP%%
 
   network_hosts:
     %%NODE1_NAME%%:
-      ip: %%NODE1_IP%%
+      ip: %%NODE1_MGMT_IP%%
     %%NODE2_NAME%%:
-      ip: %%NODE2_IP%%
+      ip: %%NODE2_MGMT_IP%%
     %%NODE3_NAME%%:
-      ip: %%NODE3_IP%%
+      ip: %%NODE3_MGMT_IP%%
 
   haproxy_hosts:
     %%NODE3_NAME%%:
-      ip: %%NODE3_IP%%
+      ip: %%NODE3_MGMT_IP%%
 
 user_variables_overrides_defaults:
   nova_virt_type: qemu
