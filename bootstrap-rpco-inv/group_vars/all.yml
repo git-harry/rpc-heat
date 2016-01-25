@@ -4,14 +4,14 @@ bootstrap_host_aio_config: false
 
 id: '{{ mgmt_ip.split(".")[-1] }}'
 
- network_interfaces:
+network_interfaces:
   eth1:
     - address_family: 'inet'
       method: 'manual'
   br-snet:
     - address_family: '{{ network_interface_files.eth1.address_family }}'
       method: '{{ network_interface_files.eth1.method }}'
-      options: '{{ network_interface_files.eth1.options | combine({"bridge_ports": eth1) }}'
+      options: '{{ network_interface_files.eth1.options | combine({"bridge_ports": eth1}) }}'
   eth2:
     - address_family: 'inet'
       method: 'static'
