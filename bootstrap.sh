@@ -338,6 +338,11 @@ if [ %%DEPLOY_SWIFT%% == yes ]; then
   echo '[swift]
 all
 ' >> $BOOTSTRAPINVDIR/hosts
+pushd /root/.ssh
+  echo "%%PUBLIC_KEY%%" > id_rsa.pub
+  echo "%%PRIVATE_KEY%%" > id_rsa
+  chmod 600 *
+popd
 pushd $checkout_dir
   # clone parent repo, but don't initialise submodule yet
   if [ ! -e ${checkout_dir}/rpc-openstack ]; then

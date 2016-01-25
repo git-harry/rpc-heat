@@ -246,6 +246,16 @@ resources:
   compute2_wait_handle:
     type: "OS::Heat::SwiftSignalHandle"
 
+  ansible_keypair:
+    type: "OS::Nova::KeyPair"
+    properties:
+      name:
+        str_replace:
+          template: "%%CLUSTER_PREFIX%%-key"
+          params:
+            "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
+      save_private_key: true
+
   heat_mgmt_vxlan:
     type: OS::Neutron::Net
     properties:
@@ -347,6 +357,8 @@ resources:
             "%%NODE5_STORAGE_IP%%":
               get_attr: [compute2, networks, { str_replace: {template: stack_storage, params: {stack: {get_param: "OS::stack_name"}}} }, 0]
 
+            "%%PRIVATE_KEY%%": { get_attr: [ansible_keypair, private_key] }
+            "%%PUBLIC_KEY%%": { get_attr: [ansible_keypair, public_key] }
             "%%EXTERNAL_VIP_IP%%": { get_attr: [controller3, accessIPv4] }
             "%%CLUSTER_PREFIX%%": { get_param: cluster_prefix }
             "%%DEPLOY_LOGGING%%": { get_param: deploy_logging }
@@ -469,6 +481,9 @@ resources:
         - uuid: { get_resource: heat_tunnel }
         - uuid: { get_resource: heat_storage }
       config_drive: True
+      personality:
+        "/root/.ssh/id_rsa.pub":
+          { get_attr: [ansible_keypair, public_key] }
 
   controller2_volume:
     type: OS::Cinder::Volume
@@ -501,6 +516,9 @@ resources:
         - uuid: { get_resource: heat_tunnel }
         - uuid: { get_resource: heat_storage }
       config_drive: True
+      personality:
+        "/root/.ssh/id_rsa.pub":
+          { get_attr: [ansible_keypair, public_key] }
 
   controller3_volume:
     type: OS::Cinder::Volume
@@ -533,6 +551,9 @@ resources:
         - uuid: { get_resource: heat_tunnel }
         - uuid: { get_resource: heat_storage }
       config_drive: True
+      personality:
+        "/root/.ssh/id_rsa.pub":
+          { get_attr: [ansible_keypair, public_key] }
 
   compute1_volume:
     type: OS::Cinder::Volume
@@ -565,6 +586,9 @@ resources:
         - uuid: { get_resource: heat_tunnel }
         - uuid: { get_resource: heat_storage }
       config_drive: True
+      personality:
+        "/root/.ssh/id_rsa.pub":
+          { get_attr: [ansible_keypair, public_key] }
 
   compute2_volume:
     type: OS::Cinder::Volume
